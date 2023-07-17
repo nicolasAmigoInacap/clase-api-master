@@ -1,39 +1,51 @@
 import React, { useEffect, useState } from 'react';
-import '../css/estilos.css'
+import '../css/estilos.css';
 
-function Card(props){
+function Card(props) {
+  const [pokemonList, setPokemonList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-const [pokemon,setPokemon]=useState({});
-const [isLoading,setIsLoading]=useState(true);
-    const url='https://pokeapi.co/api/v2/pokemon/4'
-    const fethApi=async()=>{
-        const response=await fetch(url)
-        const json=await response.json()
-        setPokemon(json)
+  const url = 'https://pokeapi.co/api/v2/pokemon/?limit=10';
 
-    }
+  useEffect(() => {
+    const fetchApi = async () => {
+      const response = await fetch(url);
+      const json = await response.json();
 
-    useEffect(()=>{
-        (async()=>{
-            await fethApi()
-            setIsLoading(false)
-        })()
-        
-    },[] );
+      const pokemonDataList = await Promise.all(
+        json.results.map(async (pokemon) => {
+          const pokemonResponse = await fetch(pokemon.url);
+          const pokemonData = await pokemonResponse.json();
+          return pokemonData;
+        })
+      );
 
-if(isLoading){
-    return(
-        <div>Cargando.....</div>
-    )
+      setPokemonList(pokemonDataList);
+      setIsLoading(false);
+    };
+
+    fetchApi();
+  }, []);
+
+  if (isLoading) {
+    return <div>Cargando.....</div>;
+  }
+
+  return (
+    <div className='Fondos'>
+      {pokemonList.map((pokemon) => (
+        <div className='contenedorTexto' key={pokemon.name}>
+          <img
+            className='contenedorImagen'
+            src={pokemon.sprites.front_default}
+            alt='imagen'
+          />
+          <h5 className='contenedorTitulo'>{pokemon.name}</h5>
+          <p className='contenedorParrafo'>Tipo</p>
+        </div>
+      ))}
+    </div>
+  );
 }
 
-return(
-<div className='contenedorTexto'>
-    <img className='contenedorImagen' src={pokemon.sprites.front_default} alt='imagen'/> 
-    <h5 className='contenedorTitulo'> Nombre</h5>
-    <p className='contenedorParrafo'>tipo</p>
-</div>
-
-);
-}
 export default Card;
